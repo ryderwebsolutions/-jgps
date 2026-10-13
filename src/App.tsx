@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
-  ArrowDown,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   Camera,
-  Check,
   ChevronDown,
   Menu,
   Phone,
@@ -210,14 +208,16 @@ function PageIntro({
   image: string;
 }) {
   return (
-    <section className="page-intro">
-      <div className="page-intro-copy">
+    <section className="editorial-page-intro">
+      <div className="editorial-page-intro-copy">
         <span className="eyebrow eyebrow-orange">{label}</span>
         <h1>{title}</h1>
         <p>{text}</p>
+        <Link className="editorial-text-link" to="/contact">Talk to JGPS <ArrowUpRight size={16} /></Link>
       </div>
-      <div className="page-intro-image">
+      <div className="editorial-page-intro-image">
         <img src={image} alt="" />
+        <span>JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
       </div>
     </section>
   );
@@ -366,107 +366,99 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
 }
 
 function HomePage() {
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const featuredProjects = [projects[0], projects[2], projects[9]];
+  const featuredProject = featuredProjects[featuredIndex];
+  const featureLabels = ["The kitchen", "The bathroom", "The whole space"];
+
   return (
     <>
-      <section className="hero">
-        <img
-          className="hero-image"
-          src="/images/projects/hero-kitchen.webp"
-          alt="Sculptural stone island in a completed contemporary kitchen"
-          fetchPriority="high"
-        />
-        <div className="hero-overlay" />
-        <div className="hero-content">
-          <span className="eyebrow eyebrow-orange"><span className="status-dot" /> Renovation specialists · Dublin &amp; Leinster</span>
-          <h1>Make room<br />for <em>better.</em></h1>
-          <p>Thoughtful renovations, kitchens and bathrooms—made around the way you live.</p>
-          <div className="hero-actions">
-            <Link className="button button-orange" to="/projects">Explore our work <ArrowUpRight size={17} /></Link>
-            <Link className="button button-outline" to="/contact">Let’s talk <ArrowRight size={17} /></Link>
+      <section className="editorial-hero">
+        <div className="editorial-hero-copy">
+          <div className="editorial-overline"><span>JGPS</span><i /> RENOVATION SPECIALISTS</div>
+          <h1>Renovations.<br /><span>Kitchens.</span><br />Bathrooms.</h1>
+          <div className="editorial-hero-bottom">
+            <p>Kitchens, bathrooms and home renovations.<br />Based in Dublin. Working across Leinster.</p>
+            <Link className="editorial-circle-link" to="/projects" aria-label="Explore JGPS projects">
+              <ArrowUpRight size={23} />
+            </Link>
           </div>
+          <span className="editorial-hero-index">01 — 03</span>
         </div>
-        <a className="hero-scroll" href="#intro">
-          <span>Scroll to explore</span><ArrowDown size={15} />
-        </a>
-        <span className="hero-index">01 / 05</span>
+        <Link className="editorial-hero-image" to="/projects" aria-label="Explore the JGPS project portfolio">
+          <img
+            src="/images/projects/hero-kitchen.webp"
+            alt="Stone island, muted cabinetry and herringbone flooring in a JGPS kitchen renovation"
+            fetchPriority="high"
+          />
+          <span className="editorial-hero-image-label"><span>01</span> KITCHEN / JGPS PROJECTS</span>
+          <span className="editorial-hero-image-stamp">BUILT<br />AROUND<br /><i>home.</i></span>
+        </Link>
       </section>
 
-      <div className="ticker" aria-label="Renovations, kitchens, bathrooms">
-        <div className="ticker-track" aria-hidden="true">
-          {Array.from({ length: 4 }, (_, index) => (
-            <span key={index}>Renovations <i>✳</i> Kitchens <i>✳</i> Bathrooms <i>✳</i> Dublin &amp; Leinster <i>✳</i></span>
-          ))}
-        </div>
-      </div>
+      <section className="editorial-intro">
+        <span className="editorial-intro-index">JGPS / PROPERTY SERVICES / DUBLIN + LEINSTER</span>
+        <p>Tell us what is not working.<br /><em>We’ll talk about what could.</em></p>
+        <Link className="editorial-text-link" to="/about">A little about us <ArrowUpRight size={16} /></Link>
+      </section>
 
-      <section className="intro-section section-pad" id="intro">
-        <Reveal className="intro-kicker"><span className="eyebrow">The JGPS point of view</span></Reveal>
-        <div className="intro-main">
-          <Reveal><h2>A little more<br />thought. A lot more <em>home.</em></h2></Reveal>
-          <Reveal delay={120}>
-            <div className="intro-copy">
-              <p>JGPS Property Services brings a considered eye to the spaces you use every day. From a kitchen that draws everyone in to a bathroom that feels like a pause, good renovation changes how home feels.</p>
-              <Link className="text-link" to="/about">Get to know JGPS <ArrowUpRight size={16} /></Link>
+      <section className="home-focus" aria-labelledby="home-focus-title">
+        <div className="home-focus-top">
+          <span className="eyebrow">JGPS / Recent projects</span>
+          <Link className="editorial-text-link" to="/projects">View all projects <ArrowUpRight size={16} /></Link>
+        </div>
+        <div className="home-focus-layout">
+          <div className="home-focus-copy">
+            <span className="home-focus-number">0{featuredIndex + 1}<i> / 03</i></span>
+            <h2 id="home-focus-title" key={featuredProject.title}>{featuredProject.title}</h2>
+            <p>Renovations, kitchens and bathrooms by JGPS Property Services.</p>
+            <div className="home-focus-controls" role="group" aria-label="Choose a featured project">
+              {featureLabels.map((label, index) => (
+                <button
+                  className={`home-focus-tab${featuredIndex === index ? " is-active" : ""}`}
+                  type="button"
+                  key={label}
+                  onClick={() => setFeaturedIndex(index)}
+                  aria-pressed={featuredIndex === index}
+                >
+                  <span>0{index + 1}</span>{label}
+                </button>
+              ))}
             </div>
-          </Reveal>
-        </div>
-        <div className="intro-stamp" aria-hidden="true">JGPS<br /><span>Property<br />Services</span></div>
-      </section>
-
-      <section className="services-preview section-pad">
-        <SectionHeading
-          eyebrow="What we do"
-          title="Made for the way you live."
-          text="Specialist renovations with a focus on the rooms that make a house feel like yours."
-        />
-        <div className="service-cards">
-          {services.map((service, index) => (
-            <Reveal className="service-card" key={service.number} delay={index * 90}>
-              <Link to="/services" className="service-card-link">
-                <div className="service-card-image"><img src={service.image} alt="" loading="lazy" /></div>
-                <div className="service-card-info">
-                  <span className="service-number">{service.number}</span>
-                  <h3>{service.title}</h3>
-                  <span className="round-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span>
-                </div>
-                <p>{service.text}</p>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-        <div className="section-tail">
-          <span>Good spaces begin with good questions.</span>
-          <Link className="text-link" to="/services">Discover our approach <ArrowUpRight size={16} /></Link>
-        </div>
-      </section>
-
-      <section className="work-preview section-pad">
-        <div className="work-heading">
-          <SectionHeading eyebrow="Selected work" title="A feel for what’s possible." light />
-          <Link className="button button-outline" to="/projects">See all projects <ArrowUpRight size={16} /></Link>
-        </div>
-        <ProjectGrid items={projects.slice(0, 4)} />
-      </section>
-
-      <section className="approach-section section-pad">
-        <div className="approach-image">
-          <img src="/images/projects/renovation-herringbone.webp" alt="Freshly renovated room with herringbone flooring" loading="lazy" />
-          <span className="image-note"><Check size={15} /> Spaces shaped around you</span>
-        </div>
-        <div className="approach-copy">
-          <span className="eyebrow">A thoughtful process</span>
-          <h2>From first thought<br />to <em>feels like home.</em></h2>
-          <p>Every good transformation starts with a conversation. Tell us what you have in mind, and we can take it from there—one considered step at a time.</p>
-          <div className="approach-steps">
-            <div><span>01</span><strong>Talk it through</strong></div>
-            <div><span>02</span><strong>Shape the plan</strong></div>
-            <div><span>03</span><strong>Bring it to life</strong></div>
           </div>
-          <Link className="text-link" to="/contact">Start with a conversation <ArrowUpRight size={16} /></Link>
+          <div className="home-focus-image" key={featuredProject.src}>
+            <img src={featuredProject.src} alt={featuredProject.alt} loading="lazy" />
+            <span className="home-focus-image-tag">{featuredProject.category} / JGPS</span>
+            <Link className="home-focus-image-link" to="/projects" aria-label={`See more ${featuredProject.category.toLowerCase()} projects`}>
+              <ArrowUpRight size={20} />
+            </Link>
+          </div>
+        </div>
+        <div className="home-focus-progress" aria-hidden="true">
+          <span style={{ transform: `scaleX(${(featuredIndex + 1) / featuredProjects.length})` }} />
         </div>
       </section>
 
-      <ContactBand />
+      <section className="home-wordmark">
+        <div className="home-wordmark-photo">
+          <img src="/images/projects/bathroom-double-vanity.webp" alt="Stone bathroom with double vanity and walk-in shower" loading="lazy" />
+        </div>
+        <div className="home-wordmark-copy">
+          <span className="eyebrow">JGPS Property Services / Dublin</span>
+          <p>Kitchens, bathrooms.<br /><em>The rest of home.</em></p>
+          <Link className="editorial-text-link" to="/services">What we do <ArrowUpRight size={16} /></Link>
+          <span className="home-wordmark-vertical">RENOVATIONS&nbsp; / &nbsp;KITCHENS&nbsp; / &nbsp;BATHROOMS</span>
+        </div>
+      </section>
+
+      <section className="home-contact">
+        <span className="eyebrow eyebrow-orange">Have a room in mind?</span>
+        <h2>What are<br /><em>you planning?</em></h2>
+        <Link className="home-contact-link" to="/contact">
+          <span>Talk to JGPS about your project</span><ArrowUpRight size={22} />
+        </Link>
+        <span className="home-contact-mark">JGPS</span>
+      </section>
     </>
   );
 }
