@@ -89,7 +89,7 @@ function SiteHeader() {
   }, [menuOpen]);
 
   return (
-    <header className="site-header">
+    <header className={`site-header${location.pathname === "/" ? " site-header-home" : ""}`}>
       <Link className="brand" to="/" aria-label="JGPS Property Services home">
         <img src="/logo.png" alt="JGPS Property Services" />
       </Link>
@@ -120,8 +120,8 @@ function SiteHeader() {
             </NavLink>
           ))}
         </div>
-        <Link className="button button-small button-orange nav-cta" to="/contact">
-          Start a project <ArrowUpRight size={15} />
+        <Link className="nav-cta" to="/contact">
+          ENQUIRE <ArrowUpRight size={15} />
         </Link>
       </nav>
     </header>
@@ -366,100 +366,114 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
 }
 
 function HomePage() {
-  const [featuredIndex, setFeaturedIndex] = useState(0);
-  const featuredProjects = [projects[0], projects[2], projects[9]];
-  const featuredProject = featuredProjects[featuredIndex];
-  const featureLabels = ["The kitchen", "The bathroom", "The whole space"];
+  const coverStories = [projects[0], projects[1], projects[9]];
+  const [coverIndex, setCoverIndex] = useState(0);
+  const coverStory = coverStories[coverIndex];
+  const galleryRef = useRef<HTMLDivElement>(null);
+
+  function moveGallery(direction: -1 | 1) {
+    galleryRef.current?.scrollBy({
+      left: direction * (galleryRef.current.clientWidth * 0.7),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+    });
+  }
 
   return (
-    <>
-      <section className="editorial-hero">
-        <div className="editorial-hero-copy">
-          <div className="editorial-overline"><span>JGPS</span><i /> RENOVATION SPECIALISTS</div>
-          <h1>Renovations.<br /><span>Kitchens.</span><br />Bathrooms.</h1>
-          <div className="editorial-hero-bottom">
-            <p>Kitchens, bathrooms and home renovations.<br />Based in Dublin. Working across Leinster.</p>
-            <Link className="editorial-circle-link" to="/projects" aria-label="Explore JGPS projects">
-              <ArrowUpRight size={23} />
-            </Link>
-          </div>
-          <span className="editorial-hero-index">01 — 03</span>
+    <div className="journal-home">
+      <section className="journal-cover" aria-label="Featured JGPS renovation work">
+        <img
+          key={coverStory.src}
+          className="journal-cover-image"
+          src={coverIndex === 0 ? "/images/projects/hero-kitchen.webp" : coverStory.src}
+          alt={coverIndex === 0 ? "JGPS kitchen renovation with a stone island and herringbone floor" : coverStory.alt}
+          fetchPriority="high"
+        />
+        <div className="journal-cover-shade" />
+        <div className="journal-cover-caption" aria-live="polite">
+          <span className="journal-cover-kicker">JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
+          <h1>{coverStory.category === "Renovation" ? "Renovations" : `${coverStory.category}s`}</h1>
+          <span className="journal-cover-detail">{coverStory.title}</span>
         </div>
-        <Link className="editorial-hero-image" to="/projects" aria-label="Explore the JGPS project portfolio">
-          <img
-            src="/images/projects/hero-kitchen.webp"
-            alt="Stone island, muted cabinetry and herringbone flooring in a JGPS kitchen renovation"
-            fetchPriority="high"
-          />
-          <span className="editorial-hero-image-label"><span>01</span> KITCHEN / JGPS PROJECTS</span>
-          <span className="editorial-hero-image-stamp">BUILT<br />AROUND<br /><i>home.</i></span>
+        <div className="journal-cover-index"><span>WORK</span><strong>0{coverIndex + 1}</strong><i>/ 03</i></div>
+        <div className="journal-cover-choices" role="group" aria-label="Choose a featured project">
+          {coverStories.map((story, index) => (
+            <button
+              className={`journal-cover-choice${index === coverIndex ? " is-active" : ""}`}
+              type="button"
+              key={story.src}
+              onClick={() => setCoverIndex(index)}
+              aria-pressed={index === coverIndex}
+              aria-label={`Show ${story.category.toLowerCase()}: ${story.title}`}
+            >
+              <span>0{index + 1}</span>{story.category}
+            </button>
+          ))}
+        </div>
+        <a className="journal-cover-scroll" href="#journal">
+          <span>SCROLL TO SEE THE WORK</span><span className="journal-scroll-line" />
+        </a>
+      </section>
+
+      <section className="journal-introduction" id="journal">
+        <div className="journal-intro-meta">
+          <span>JGPS / PROPERTY SERVICES</span>
+          <span>BASED IN DUBLIN<br />WORKING ACROSS LEINSTER</span>
+        </div>
+        <div className="journal-intro-content">
+          <p>Renovations.<br />Kitchens. Bathrooms.</p>
+          <span>That is the work.<br />Here are some of the spaces.</span>
+        </div>
+        <Link className="journal-intro-link" to="/services" aria-label="See JGPS renovation services">
+          <ArrowUpRight size={19} />
         </Link>
       </section>
 
-      <section className="editorial-intro">
-        <span className="editorial-intro-index">JGPS / PROPERTY SERVICES / DUBLIN + LEINSTER</span>
-        <p>Tell us what is not working.<br /><em>We’ll talk about what could.</em></p>
-        <Link className="editorial-text-link" to="/about">A little about us <ArrowUpRight size={16} /></Link>
+      <section className="journal-gallery-section" aria-labelledby="journal-gallery-title">
+        <div className="journal-gallery-heading">
+          <div><span>01 — 10&nbsp; / &nbsp;JGPS PROJECT PHOTOGRAPHS</span><h2 id="journal-gallery-title">The work.</h2></div>
+          <div className="journal-gallery-controls">
+            <button type="button" aria-label="Scroll projects left" onClick={() => moveGallery(-1)}><ArrowLeft size={17} /></button>
+            <button type="button" aria-label="Scroll projects right" onClick={() => moveGallery(1)}><ArrowRight size={17} /></button>
+          </div>
+        </div>
+        <div className="journal-gallery-track" ref={galleryRef}>
+          {projects.map((project, index) => (
+            <article className="journal-gallery-item" key={project.src}>
+              <Link className="journal-gallery-image" to="/projects" aria-label={`View ${project.category.toLowerCase()} project photos`}>
+                <img src={project.src} alt={project.alt} loading="lazy" />
+                <span className="journal-gallery-arrow"><ArrowUpRight size={18} /></span>
+              </Link>
+              <div className="journal-gallery-caption">
+                <span>0{index + 1}&nbsp; / &nbsp;{project.category.toUpperCase()}</span>
+                <span>{project.title}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="journal-gallery-foot">
+          <span>Photographs of JGPS Property Services work</span>
+          <Link to="/projects">Open the full portfolio <ArrowUpRight size={14} /></Link>
+        </div>
       </section>
 
-      <section className="home-focus" aria-labelledby="home-focus-title">
-        <div className="home-focus-top">
-          <span className="eyebrow">JGPS / Recent projects</span>
-          <Link className="editorial-text-link" to="/projects">View all projects <ArrowUpRight size={16} /></Link>
+      <section className="journal-services">
+        <div className="journal-services-image">
+          <img src="/images/projects/bathroom-double-vanity.webp" alt="Bathroom renovation featuring a double vanity and illuminated mirror" loading="lazy" />
+          <span>JGPS / BATHROOM</span>
         </div>
-        <div className="home-focus-layout">
-          <div className="home-focus-copy">
-            <span className="home-focus-number">0{featuredIndex + 1}<i> / 03</i></span>
-            <h2 id="home-focus-title" key={featuredProject.title}>{featuredProject.title}</h2>
-            <p>Renovations, kitchens and bathrooms by JGPS Property Services.</p>
-            <div className="home-focus-controls" role="group" aria-label="Choose a featured project">
-              {featureLabels.map((label, index) => (
-                <button
-                  className={`home-focus-tab${featuredIndex === index ? " is-active" : ""}`}
-                  type="button"
-                  key={label}
-                  onClick={() => setFeaturedIndex(index)}
-                  aria-pressed={featuredIndex === index}
-                >
-                  <span>0{index + 1}</span>{label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="home-focus-image" key={featuredProject.src}>
-            <img src={featuredProject.src} alt={featuredProject.alt} loading="lazy" />
-            <span className="home-focus-image-tag">{featuredProject.category} / JGPS</span>
-            <Link className="home-focus-image-link" to="/projects" aria-label={`See more ${featuredProject.category.toLowerCase()} projects`}>
-              <ArrowUpRight size={20} />
+        <div className="journal-services-list">
+          <span className="journal-services-kicker">WHAT JGPS DOES&nbsp; / &nbsp;01—03</span>
+          {services.map((service) => (
+            <Link className="journal-service-link" to="/services" key={service.number}>
+              <span>{service.number}</span><strong>{service.title}</strong><ArrowUpRight size={18} />
             </Link>
-          </div>
-        </div>
-        <div className="home-focus-progress" aria-hidden="true">
-          <span style={{ transform: `scaleX(${(featuredIndex + 1) / featuredProjects.length})` }} />
+          ))}
+          <p>Renovation specialists.<br />Dublin &amp; Leinster.</p>
         </div>
       </section>
 
-      <section className="home-wordmark">
-        <div className="home-wordmark-photo">
-          <img src="/images/projects/bathroom-double-vanity.webp" alt="Stone bathroom with double vanity and walk-in shower" loading="lazy" />
-        </div>
-        <div className="home-wordmark-copy">
-          <span className="eyebrow">JGPS Property Services / Dublin</span>
-          <p>Kitchens, bathrooms.<br /><em>The rest of home.</em></p>
-          <Link className="editorial-text-link" to="/services">What we do <ArrowUpRight size={16} /></Link>
-          <span className="home-wordmark-vertical">RENOVATIONS&nbsp; / &nbsp;KITCHENS&nbsp; / &nbsp;BATHROOMS</span>
-        </div>
-      </section>
-
-      <section className="home-contact">
-        <span className="eyebrow eyebrow-orange">Have a room in mind?</span>
-        <h2>What are<br /><em>you planning?</em></h2>
-        <Link className="home-contact-link" to="/contact">
-          <span>Talk to JGPS about your project</span><ArrowUpRight size={22} />
-        </Link>
-        <span className="home-contact-mark">JGPS</span>
-      </section>
-    </>
+      <JournalContact />
+    </div>
   );
 }
 
@@ -467,13 +481,13 @@ function ServicesPage() {
   return (
     <>
       <PageIntro
-        label="Our services"
-        title="Considered renovations. Beautifully lived in."
-        text="JGPS Property Services specialises in renovations, kitchens and bathrooms across Dublin and Leinster."
+        label="What JGPS does"
+        title="Renovations. Kitchens. Bathrooms."
+        text="JGPS Property Services works across Dublin and Leinster."
         image="/images/projects/bathroom-double-vanity.webp"
       />
       <section className="service-detail-list section-pad">
-        <SectionHeading eyebrow="A focus on the details" title="Spaces that work hard—and feel good." />
+        <SectionHeading eyebrow="JGPS / Services" title="The work, in three parts." />
         {services.map((service, index) => (
           <Reveal key={service.number} className={`service-detail${index % 2 ? " service-detail-reverse" : ""}`}>
             <div className="service-detail-photo">
@@ -486,10 +500,10 @@ function ServicesPage() {
               <p>{service.text}</p>
               <p className="service-detail-secondary">
                 {service.title === "Kitchens"
-                  ? "From the first idea to the finishing touches, a kitchen renovation can bring new rhythm to your home."
+                  ? "Show us your kitchen and tell us what you would like to change."
                   : service.title === "Bathrooms"
-                    ? "A better bathroom balances everyday practicality with the small details that make it feel special."
-                    : "Whether you have one room in mind or a bigger change ahead, start with a conversation about what matters to you."}
+                    ? "Tell us what is working, what is not, and what you would like instead."
+                    : "Tell us which rooms you have in mind and what you would like to change."}
               </p>
               <Link className="text-link" to="/contact">Talk about your {service.title.toLowerCase()} <ArrowUpRight size={16} /></Link>
             </div>
@@ -509,18 +523,18 @@ function ProjectsPage() {
   return (
     <>
       <PageIntro
-        label="The portfolio"
-        title="A few spaces, completely reimagined."
-        text="A look at the kitchens, bathrooms and renovations brought to life by JGPS."
+        label="JGPS / Project photographs"
+        title="Renovations. Kitchens. Bathrooms."
+        text="A selection of photographs from JGPS Property Services projects."
         image="/images/projects/kitchen-signature.webp"
       />
       <section className="portfolio-section section-pad">
         <div className="portfolio-heading">
           <div>
-            <span className="eyebrow">JGPS / Selected work</span>
-            <h2>Real spaces.<br /><em>New perspective.</em></h2>
+            <span className="eyebrow">JGPS / Portfolio</span>
+            <h2>The work.</h2>
           </div>
-          <p>Explore the photography, filter by room, and open any image for a closer look.</p>
+          <p>Filter by project type. Select a photograph to view it larger.</p>
         </div>
         <div className="portfolio-filters" role="group" aria-label="Filter projects">
           {filters.map((category) => (
@@ -537,7 +551,7 @@ function ProjectsPage() {
           ))}
         </div>
         <ProjectGrid items={filteredProjects} />
-        <p className="portfolio-note">Project images are from the JGPS Property Services portfolio.</p>
+        <p className="portfolio-note">JGPS Property Services / Dublin + Leinster</p>
       </section>
       <ContactBand />
     </>
@@ -548,33 +562,25 @@ function AboutPage() {
   return (
     <>
       <PageIntro
-        label="About JGPS"
-        title="A personal approach to transforming home."
-        text="JGPS Property Services is a renovation specialist serving homeowners across Dublin and Leinster."
+        label="JGPS / About"
+        title="JGPS Property Services."
+        text="Renovation specialists. Based in Dublin and working across Leinster."
         image="/images/projects/renovation-herringbone.webp"
       />
       <section className="about-story section-pad">
-        <div className="about-story-label"><span className="eyebrow">The idea is simple</span><span className="about-asterisk">✳</span></div>
+        <div className="about-story-label"><span className="eyebrow">Renovation specialists</span><span className="about-asterisk">J</span></div>
         <div className="about-story-copy">
-          <h2>Listen closely.<br />Make it <em>feel right.</em></h2>
-          <p>Every home has its own character, and every renovation starts somewhere different. JGPS brings care and a considered eye to kitchens, bathrooms and the spaces in between—helping turn good ideas into places that feel unmistakably yours.</p>
-          <p>Based in Dublin and working across Leinster, JGPS Property Services is here for the conversation, the planning and the finished details that make a difference.</p>
-          <Link className="text-link" to="/contact">Tell us what you have in mind <ArrowUpRight size={16} /></Link>
+          <h2>Kitchens.<br />Bathrooms.<br /><em>Home renovations.</em></h2>
+          <p>JGPS Property Services specialises in renovation work, with a focus on kitchens and bathrooms.</p>
+          <p>Based in Dublin. Working across Leinster.</p>
+          <Link className="text-link" to="/contact">Contact JGPS <ArrowUpRight size={16} /></Link>
         </div>
       </section>
       <section className="about-image-break">
         <img src="/images/projects/kitchen-island.webp" alt="Bright, contemporary kitchen with a central island" loading="lazy" />
         <div className="about-image-caption"><span>JGPS PROPERTY SERVICES</span><span>DUBLIN · LEINSTER</span></div>
       </section>
-      <section className="about-values section-pad">
-        <SectionHeading eyebrow="What matters" title="The details are the difference." />
-        <div className="value-grid">
-          <Reveal><span className="value-number">01</span><h3>Thoughtful by design</h3><p>A good result starts with understanding how you want your space to work.</p></Reveal>
-          <Reveal delay={90}><span className="value-number">02</span><h3>Made around you</h3><p>Your home, your routines, your priorities—each project starts with what matters to you.</p></Reveal>
-          <Reveal delay={180}><span className="value-number">03</span><h3>Finished with care</h3><p>It is the final choices and careful details that make a space feel complete.</p></Reveal>
-        </div>
-      </section>
-      <ContactBand />
+      <JournalContact />
     </>
   );
 }
@@ -600,8 +606,8 @@ function ContactPage() {
       <section className="contact-page section-pad">
         <div className="contact-intro">
           <span className="eyebrow eyebrow-orange">Start a conversation</span>
-          <h1>Tell us what<br />you’re <em>imagining.</em></h1>
-          <p>A new kitchen, a more considered bathroom or a bigger renovation—tell us a little about it. We would love to hear what you have in mind.</p>
+          <h1>Tell us<br />about the <em>work.</em></h1>
+          <p>Kitchens, bathrooms or a home renovation. Send JGPS a note or get in touch directly.</p>
           <div className="contact-direct">
             <a className="contact-direct-item" href={contact.phoneHref}>
               <span className="contact-icon"><Phone size={17} /></span>
@@ -623,7 +629,7 @@ function ContactPage() {
         <div className="contact-form-wrap">
           <div className="contact-form-heading">
             <span className="eyebrow">Project enquiry</span>
-            <h2>A few details to get us started.</h2>
+            <h2>Project enquiry</h2>
           </div>
           <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-row">
@@ -677,19 +683,16 @@ function ContactPage() {
 
 function ContactBand() {
   return (
-    <section className="contact-band section-pad">
-      <div>
-        <span className="eyebrow eyebrow-orange">The next step</span>
-        <h2>Good things start<br />with <em>“what if?”</em></h2>
-      </div>
-      <div className="contact-band-right">
-        <p>Tell us what you’re thinking. A quick call, a message or a few project details—we’ll start there.</p>
-        <div className="contact-band-actions">
-          <Link className="button button-orange" to="/contact">Start your enquiry <ArrowUpRight size={16} /></Link>
-          <a className="contact-band-phone" href={contact.phoneHref}><Phone size={15} /> {contact.phoneDisplay}</a>
-        </div>
-      </div>
-      <span className="contact-band-spark" aria-hidden="true">✳</span>
+    <JournalContact />
+  );
+}
+
+function JournalContact() {
+  return (
+    <section className="journal-contact">
+      <span>JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
+      <h2>Planning a renovation?</h2>
+      <Link to="/contact">Contact JGPS <ArrowUpRight size={17} /></Link>
     </section>
   );
 }
