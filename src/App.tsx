@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { contact, projects, services, type ProjectCategory, type ProjectImage } from "./data";
+import { contact, homeFeatures, projects, services, type ProjectCategory, type ProjectImage } from "./data";
 
 const pageLinks = [
   { to: "/", label: "Home" },
@@ -366,110 +366,77 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
 }
 
 function HomePage() {
-  const coverStories = [projects[0], projects[1], projects[9]];
-  const [coverIndex, setCoverIndex] = useState(0);
-  const coverStory = coverStories[coverIndex];
-  const galleryRef = useRef<HTMLDivElement>(null);
-
-  function moveGallery(direction: -1 | 1) {
-    galleryRef.current?.scrollBy({
-      left: direction * (galleryRef.current.clientWidth * 0.7),
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
-    });
-  }
-
   return (
     <div className="journal-home">
-      <section className="journal-cover" aria-label="Featured JGPS renovation work">
+      <section className="journal-cover home-cover" aria-label="JGPS renovation work">
         <img
-          key={coverStory.src}
           className="journal-cover-image"
-          src={coverIndex === 0 ? "/images/projects/hero-kitchen.webp" : coverStory.src}
-          alt={coverIndex === 0 ? "JGPS kitchen renovation with a stone island and herringbone floor" : coverStory.alt}
+          src="/images/projects/hero-kitchen.webp"
+          alt="Kitchen with a veined stone island, pale cabinets, black-framed glazing and herringbone floor"
           fetchPriority="high"
         />
         <div className="journal-cover-shade" />
-        <div className="journal-cover-caption" aria-live="polite">
+        <div className="home-cover-copy">
           <span className="journal-cover-kicker">JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
-          <h1>{coverStory.category === "Renovation" ? "Renovations" : `${coverStory.category}s`}</h1>
-          <span className="journal-cover-detail">{coverStory.title}</span>
+          <span className="home-cover-index">KITCHEN / 01</span>
+          <h1>Stone across<br />the island.</h1>
+          <p>Veined stone on the island and splashback. Pale cabinetry. Herringbone underfoot.</p>
+          <a className="home-cover-link" href="#kitchen">
+            <span>SEE THE KITCHEN</span><ArrowRight size={15} />
+          </a>
         </div>
-        <div className="journal-cover-index"><span>WORK</span><strong>0{coverIndex + 1}</strong><i>/ 03</i></div>
-        <div className="journal-cover-choices" role="group" aria-label="Choose a featured project">
-          {coverStories.map((story, index) => (
-            <button
-              className={`journal-cover-choice${index === coverIndex ? " is-active" : ""}`}
-              type="button"
-              key={story.src}
-              onClick={() => setCoverIndex(index)}
-              aria-pressed={index === coverIndex}
-              aria-label={`Show ${story.category.toLowerCase()}: ${story.title}`}
-            >
-              <span>0{index + 1}</span>{story.category}
-            </button>
-          ))}
-        </div>
+        <span className="home-cover-image-credit">JGPS PROJECT PHOTOGRAPH&nbsp; / &nbsp;01—03</span>
         <a className="journal-cover-scroll" href="#journal">
-          <span>SCROLL TO SEE THE WORK</span><span className="journal-scroll-line" />
+          <span>SCROLL TO EXPLORE THE WORK</span><span className="journal-scroll-line" />
         </a>
       </section>
 
       <section className="journal-introduction" id="journal">
         <div className="journal-intro-meta">
           <span>JGPS / PROPERTY SERVICES</span>
-          <span>BASED IN DUBLIN<br />WORKING ACROSS LEINSTER</span>
+          <span>RENOVATIONS<br />KITCHENS / BATHROOMS</span>
         </div>
         <div className="journal-intro-content">
-          <p>Renovations.<br />Kitchens. Bathrooms.</p>
-          <span>That is the work.<br />Here are some of the spaces.</span>
+          <p>Renovation specialists.<br />Based in Dublin.</p>
+          <span>Working across Leinster, with a focus on kitchens and bathrooms.</span>
         </div>
-        <Link className="journal-intro-link" to="/services" aria-label="See JGPS renovation services">
+        <Link className="journal-intro-link" to="/services" aria-label="See JGPS services">
           <ArrowUpRight size={19} />
         </Link>
       </section>
 
-      <section className="journal-gallery-section" aria-labelledby="journal-gallery-title">
-        <div className="journal-gallery-heading">
-          <div><span>01 — 10&nbsp; / &nbsp;JGPS PROJECT PHOTOGRAPHS</span><h2 id="journal-gallery-title">The work.</h2></div>
-          <div className="journal-gallery-controls">
-            <button type="button" aria-label="Scroll projects left" onClick={() => moveGallery(-1)}><ArrowLeft size={17} /></button>
-            <button type="button" aria-label="Scroll projects right" onClick={() => moveGallery(1)}><ArrowRight size={17} /></button>
+      {homeFeatures.map((feature, index) => (
+        <section className={`home-work home-work-${feature.id}`} id={feature.id} key={feature.id}>
+          <div className="home-work-heading">
+            <span>{feature.section}</span>
+            <span>JGPS PROPERTY SERVICES</span>
           </div>
-        </div>
-        <div className="journal-gallery-track" ref={galleryRef}>
-          {projects.map((project, index) => (
-            <article className="journal-gallery-item" key={project.src}>
-              <Link className="journal-gallery-image" to="/projects" aria-label={`View ${project.category.toLowerCase()} project photos`}>
-                <img src={project.src} alt={project.alt} loading="lazy" />
-                <span className="journal-gallery-arrow"><ArrowUpRight size={18} /></span>
-              </Link>
-              <div className="journal-gallery-caption">
-                <span>0{index + 1}&nbsp; / &nbsp;{project.category.toUpperCase()}</span>
-                <span>{project.title}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="journal-gallery-foot">
-          <span>Photographs of JGPS Property Services work</span>
-          <Link to="/projects">Open the full portfolio <ArrowUpRight size={14} /></Link>
-        </div>
-      </section>
+          <div className="home-work-main">
+            <div className="home-work-copy">
+              <h2>{feature.title}</h2>
+              <p>{feature.summary}</p>
+              <Link to="/contact">Enquire about a {feature.id === "renovation" ? "renovation" : feature.id} <ArrowUpRight size={15} /></Link>
+            </div>
+            <figure className="home-work-cover">
+              <img src={feature.cover.src} alt={feature.cover.alt} loading={index === 0 ? "eager" : "lazy"} />
+              <figcaption><span>0{index + 1}</span>{feature.cover.caption}</figcaption>
+            </figure>
+          </div>
+          <div className="home-work-details">
+            {feature.details.map((detail, detailIndex) => (
+              <figure key={detail.src}>
+                <img src={detail.src} alt={detail.alt} loading="lazy" />
+                <figcaption><span>0{index + detailIndex + 2}</span>{detail.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <section className="journal-services">
-        <div className="journal-services-image">
-          <img src="/images/projects/bathroom-double-vanity.webp" alt="Bathroom renovation featuring a double vanity and illuminated mirror" loading="lazy" />
-          <span>JGPS / BATHROOM</span>
-        </div>
-        <div className="journal-services-list">
-          <span className="journal-services-kicker">WHAT JGPS DOES&nbsp; / &nbsp;01—03</span>
-          {services.map((service) => (
-            <Link className="journal-service-link" to="/services" key={service.number}>
-              <span>{service.number}</span><strong>{service.title}</strong><ArrowUpRight size={18} />
-            </Link>
-          ))}
-          <p>Renovation specialists.<br />Dublin &amp; Leinster.</p>
-        </div>
+      <section className="home-services-note">
+        <span>JGPS / SERVICES</span>
+        <p>Renovations&nbsp; · &nbsp;Kitchens&nbsp; · &nbsp;Bathrooms</p>
+        <Link to="/services">More about the work <ArrowUpRight size={15} /></Link>
       </section>
 
       <JournalContact />
