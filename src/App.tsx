@@ -6,6 +6,8 @@ import {
   ArrowUpRight,
   Camera,
   ChevronDown,
+  Mail,
+  MessageCircle,
   Menu,
   Phone,
   X,
@@ -100,6 +102,44 @@ function SiteHeader() {
       <Link className="brand" to="/" aria-label="JGPS Property Services home">
         <img src="/logo.png" alt="JGPS Property Services" />
       </Link>
+      <div className="header-social-links">
+        <a
+          className="header-social-link header-social-instagram"
+          href={contact.instagram}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Follow JGPS on Instagram"
+        >
+          <svg
+            className="instagram-icon"
+            width="19"
+            height="19"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
+          </svg>
+        </a>
+        <a
+          className="header-social-link header-social-whatsapp"
+          href={contact.whatsappHref}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Message JGPS on WhatsApp at ${contact.phoneDisplay}`}
+        >
+          <span className="whatsapp-icon" aria-hidden="true">
+            <MessageCircle size={21} />
+            <Phone size={9} />
+          </span>
+        </a>
+      </div>
       <button
         className="menu-toggle"
         type="button"
@@ -143,21 +183,52 @@ function SiteFooter() {
           <Link className="brand footer-brand" to="/" aria-label="JGPS Property Services home">
             <img src="/logo.png" alt="JGPS Property Services" />
           </Link>
-          <p>Renovation specialists.<br />Dublin &amp; Leinster.</p>
+          <p>Considered renovations for the way you live.</p>
+          <span className="footer-location">Dublin &amp; Leinster</span>
         </div>
-        <div className="footer-links">
+        <nav className="footer-links" aria-label="Footer navigation">
           <span className="eyebrow">Explore</span>
           {pageLinks.slice(1).map((link) => (
             <Link key={link.to} to={link.to}>{link.label}</Link>
           ))}
-        </div>
-        <div className="footer-links">
+        </nav>
+        <div className="footer-links footer-contact-links">
           <span className="eyebrow">Say hello</span>
-          <a href={contact.phoneHref}>{contact.phoneDisplay}</a>
-          <a href={`mailto:${contact.email}`}>{contact.email}</a>
-          <a href={contact.instagram} target="_blank" rel="noreferrer">
-            Instagram <ArrowUpRight size={13} />
+          <a className="footer-contact-link" href={contact.phoneHref}>
+            <span className="footer-contact-icon"><Phone size={17} aria-hidden="true" /></span>
+            <span className="footer-contact-copy"><small>Call us</small><strong>{contact.phoneDisplay}</strong></span>
+            <ArrowUpRight size={14} aria-hidden="true" />
           </a>
+          <a className="footer-contact-link" href={`mailto:${contact.email}`}>
+            <span className="footer-contact-icon"><Mail size={17} aria-hidden="true" /></span>
+            <span className="footer-contact-copy"><small>Email us</small><strong>{contact.email}</strong></span>
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+          <div className="footer-social-links" aria-label="Social media">
+            <a href={contact.instagram} target="_blank" rel="noreferrer" aria-label="Follow JGPS on Instagram">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
+            <a href={contact.whatsappHref} target="_blank" rel="noreferrer" aria-label={`Message JGPS on WhatsApp at ${contact.phoneDisplay}`}>
+              <span className="whatsapp-icon" aria-hidden="true">
+                <MessageCircle size={19} />
+                <Phone size={8} />
+              </span>
+            </a>
+          </div>
         </div>
       </div>
       <div className="footer-bottom">
@@ -372,9 +443,9 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
   );
 }
 
-type ArchiveCategory = "Bathroom" | "Interior";
+type ArchiveCategory = "Bathroom" | "Kitchen" | "Interior";
 type ArchiveFilter = "All" | ArchiveCategory;
-type PhotoCategory = ArchiveCategory | "Kitchen" | "Renovation";
+type PhotoCategory = ArchiveCategory | "Renovation";
 
 type ArchivePhoto = {
   src: string;
@@ -383,8 +454,10 @@ type ArchivePhoto = {
   alt: string;
 };
 
-const archivePhotosByCategory: Record<ArchiveCategory, ArchivePhoto[]> = {
-  Bathroom: Array.from({ length: 67 }, (_, index) => {
+const kitchenInteriorNumbers = new Set([4, 11, 13, 14, 15, 16]);
+const bathroomInteriorNumbers = new Set([3, 6, 7, 29]);
+
+const bathroomArchivePhotos = Array.from({ length: 67 }, (_, index): ArchivePhoto => {
     const number = index + 1;
     return {
       src: `/images/archive/bathroom-${String(number).padStart(3, "0")}.webp`,
@@ -392,58 +465,93 @@ const archivePhotosByCategory: Record<ArchiveCategory, ArchivePhoto[]> = {
       number,
       alt: `Bathroom photograph ${number} from the JGPS photo archive`,
     };
-  }),
-  Interior: Array.from({ length: 49 }, (_, index) => {
+  });
+
+const interiorArchivePhotos = Array.from({ length: 49 }, (_, index): ArchivePhoto => {
     const number = index + 1;
     return {
       src: `/images/archive/interior-${String(number).padStart(3, "0")}.webp`,
-      category: "Interior",
+      category: bathroomInteriorNumbers.has(number) ? "Bathroom" : "Interior",
       number,
-      alt: `Interior photograph ${number} from the JGPS photo archive`,
+      alt: bathroomInteriorNumbers.has(number)
+        ? `Bathroom photograph ${number} from the JGPS photo archive`
+        : `Interior photograph ${number} from the JGPS photo archive`,
     };
-  }),
+  });
+
+const kitchenArchivePhotos: ArchivePhoto[] = [
+  ...[4, 11, 13, 14, 15, 16].map((number) => ({
+    ...interiorArchivePhotos[number - 1],
+    category: "Kitchen" as const,
+    alt: `Kitchen photograph ${number} from the JGPS photo archive`,
+  })),
+  {
+    ...bathroomArchivePhotos[45],
+    category: "Kitchen",
+    alt: "Deep green fitted kitchen with integrated appliances and warm timber accents",
+  },
+];
+
+const photoPriority = [
+  "/images/archive/interior-006.webp",
+  "/images/archive/interior-014.webp",
+  "/images/archive/bathroom-025.webp",
+  "/images/archive/interior-004.webp",
+  "/images/archive/interior-003.webp",
+  "/images/archive/bathroom-041.webp",
+  "/images/archive/interior-011.webp",
+  "/images/archive/interior-013.webp",
+  "/images/archive/bathroom-046.webp",
+  "/images/archive/interior-007.webp",
+  "/images/archive/interior-009.webp",
+];
+const photoPriorityRank = new Map(photoPriority.map((src, index) => [src, index]));
+const prioritizePhotos = (photos: ArchivePhoto[]) => [...photos].sort((first, second) => {
+  const firstRank = photoPriorityRank.get(first.src);
+  const secondRank = photoPriorityRank.get(second.src);
+  if (firstRank === undefined) return secondRank === undefined ? 0 : 1;
+  if (secondRank === undefined) return -1;
+  return firstRank - secondRank;
+});
+
+const archivePhotosByCategory: Record<ArchiveCategory, ArchivePhoto[]> = {
+  Bathroom: prioritizePhotos([
+    ...bathroomArchivePhotos.filter((photo) => photo.number !== 46),
+    ...interiorArchivePhotos.filter((photo) => bathroomInteriorNumbers.has(photo.number)),
+  ]),
+  Kitchen: prioritizePhotos(kitchenArchivePhotos),
+  Interior: prioritizePhotos(interiorArchivePhotos.filter(
+    (photo) => !kitchenInteriorNumbers.has(photo.number) && !bathroomInteriorNumbers.has(photo.number),
+  )),
 };
 
-const allArchivePhotos = [
+const allArchivePhotos = prioritizePhotos([
   ...archivePhotosByCategory.Bathroom,
+  ...archivePhotosByCategory.Kitchen,
   ...archivePhotosByCategory.Interior,
-];
+]);
 
-const homeArchivePhotos = [
-  ...[1, 7, 25, 41, 52, 67].map((number) => archivePhotosByCategory.Bathroom[number - 1]),
-  ...[1, 9, 17, 25, 37, 49].map((number) => archivePhotosByCategory.Interior[number - 1]),
-];
+const homeArchivePhotos = allArchivePhotos.slice(0, 12);
 
 const featuredPhotos: ArchivePhoto[] = [
+  { ...projects[0], number: 1 },
   {
-    src: "/images/projects/kitchen-signature.webp",
+    ...interiorArchivePhotos[10],
     category: "Kitchen",
-    number: 1,
-    alt: "Contemporary kitchen with a sculptural stone island and herringbone floor",
+    number: 2,
+    alt: "Deep green fitted kitchen with warm wood worktops and illuminated tile backsplash",
   },
   {
-    src: "/images/archive/bathroom-007.webp",
+    ...bathroomArchivePhotos[24],
     category: "Bathroom",
-    number: 7,
-    alt: "Bathroom with a lit round mirror, oak vanity and wall-mounted toilet",
+    number: 3,
+    alt: "Bathroom with a floating vanity, pebble floor and black herringbone shower feature wall",
   },
   {
-    src: "/images/archive/bathroom-025.webp",
-    category: "Bathroom",
-    number: 25,
-    alt: "Bathroom with dark herringbone tile, a clear-glass shower and wall-mounted toilet",
-  },
-  {
-    src: "/images/projects/renovation-living.webp",
-    category: "Renovation",
-    number: 1,
-    alt: "Bright renovated living space with wide windows and timber flooring",
-  },
-  {
-    src: "/images/archive/bathroom-041.webp",
-    category: "Bathroom",
-    number: 41,
-    alt: "Bathroom with an illuminated round mirror, walk-in shower and white tiled walls",
+    ...interiorArchivePhotos[8],
+    category: "Interior",
+    number: 4,
+    alt: "Sage green built-in cabinetry with warmly lit timber display shelves",
   },
 ];
 
@@ -454,7 +562,6 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
 
-  const activeFeaturedPhoto = featuredPhotos[activeFeaturedIndex] ?? featuredPhotos[0];
   const filteredPhotos = useMemo(
     () => filter === "All" ? allArchivePhotos : archivePhotosByCategory[filter],
     [filter],
@@ -467,6 +574,18 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
   const photoSequence = useMemo(() => Array.from(
     new Map([...featuredPhotos, ...filteredPhotos].map((photo) => [photo.src, photo])).values(),
   ), [filteredPhotos]);
+
+  useEffect(() => {
+    if (mode !== "home" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setActiveFeaturedIndex((index) => (index + 1) % featuredPhotos.length);
+      }
+    }, 7000);
+
+    return () => window.clearInterval(interval);
+  }, [mode]);
 
   useEffect(() => {
     if (!activePhoto) return;
@@ -537,20 +656,19 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
       {mode === "home" && (
       <section className="home-mosaic" aria-label="Selected JGPS project photographs">
         <div className="home-hero-stage">
-          <button
-            className="home-hero-image"
-            type="button"
-            aria-label={`Enlarge ${activeFeaturedPhoto.category.toLowerCase()} photograph ${String(activeFeaturedPhoto.number).padStart(2, "0")}`}
-            onClick={(event) => openPhoto(activeFeaturedPhoto, event.currentTarget)}
-          >
-            <img
-              key={activeFeaturedPhoto.src}
-              src={activeFeaturedPhoto.src}
-              alt={activeFeaturedPhoto.alt}
-              fetchPriority="high"
-              decoding="async"
-            />
-          </button>
+          <div className="home-hero-image">
+            {featuredPhotos.map((photo, index) => (
+              <img
+                className={activeFeaturedIndex === index ? "is-active" : ""}
+                key={photo.src}
+                src={photo.src}
+                alt={activeFeaturedIndex === index ? photo.alt : ""}
+                aria-hidden={activeFeaturedIndex !== index}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                decoding="async"
+              />
+            ))}
+          </div>
           <div className="home-hero-shade" aria-hidden="true" />
           <div className="home-hero-location">
             <span>JGPS PROPERTY SERVICES</span>
@@ -570,46 +688,28 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
             </div>
           </div>
           <div className="home-hero-explorer">
-            <div className="home-hero-thumbnails" role="group" aria-label="Choose a featured photograph">
-              {featuredPhotos.map((photo, index) => (
-                <button
-                  key={photo.src}
-                  className={`home-hero-thumbnail${activeFeaturedIndex === index ? " is-active" : ""}`}
-                  type="button"
-                  aria-label={`Show ${photo.category.toLowerCase()} photograph ${String(photo.number).padStart(2, "0")}`}
-                  aria-pressed={activeFeaturedIndex === index}
-                  onClick={() => setActiveFeaturedIndex(index)}
-                >
-                  <img src={photo.src} alt="" loading="lazy" decoding="async" />
-                </button>
-              ))}
-              <div className="home-hero-navigation">
-                <span aria-live="polite">
-                  <strong>{String(activeFeaturedIndex + 1).padStart(2, "0")}</strong>
-                  <i aria-hidden="true" />
-                  {String(featuredPhotos.length).padStart(2, "0")}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Previous featured photograph"
-                  onClick={() => setActiveFeaturedIndex((index) => (index - 1 + featuredPhotos.length) % featuredPhotos.length)}
-                >
-                  <ArrowLeft size={17} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next featured photograph"
-                  onClick={() => setActiveFeaturedIndex((index) => (index + 1) % featuredPhotos.length)}
-                >
-                  <ArrowRight size={17} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
             <a className="home-hero-archive-link" href="#photo-archive">
               <Camera size={15} aria-hidden="true" />
               <span>Explore selected photographs</span>
               <ArrowDown size={15} aria-hidden="true" />
             </a>
+            <div className="home-hero-slideshow" aria-hidden="true">
+              <span className="home-hero-slideshow-count">
+                {String(activeFeaturedIndex + 1).padStart(2, "0")}
+                <i />
+                {String(featuredPhotos.length).padStart(2, "0")}
+              </span>
+              <div className="home-hero-slideshow-progress">
+                {featuredPhotos.map((photo, index) => (
+                  <span
+                    className={`home-hero-progress-item${activeFeaturedIndex === index ? " is-active" : ""}`}
+                    key={photo.src}
+                  >
+                    <i />
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -661,13 +761,13 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
           <h2 id="home-archive-title">No two rooms<br /><em>the same.</em></h2>
         </div>
         <p>{mode === "archive"
-          ? "Browse the full JGPS archive of bathrooms and interiors. Select any photograph to view it larger."
-          : "A selection of JGPS bathrooms and interiors. Explore the full photo archive on the projects page."}</p>
+          ? "Browse the full JGPS archive of bathrooms, kitchens and interiors. Select any photograph to view it larger."
+          : "A selection of JGPS bathrooms, kitchens and interiors. Explore the full photo archive on the projects page."}</p>
       </div>
 
       <div className="home-archive-toolbar">
         <div className="home-archive-filters" role="group" aria-label="Filter photo archive">
-          {(["All", "Bathroom", "Interior"] as const).map((option) => (
+          {(["All", "Bathroom", "Kitchen", "Interior"] as const).map((option) => (
             <button
               key={option}
               className={`home-archive-filter${filter === option ? " is-active" : ""}`}
@@ -676,9 +776,7 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
               onClick={() => setArchiveFilter(option)}
             >
               {option === "All" ? "All photographs" : `${option}s`}
-              {option === "All" && <span>116</span>}
-              {option === "Bathroom" && <span>67</span>}
-              {option === "Interior" && <span>49</span>}
+              <span>{option === "All" ? allArchivePhotos.length : archivePhotosByCategory[option].length}</span>
             </button>
           ))}
         </div>

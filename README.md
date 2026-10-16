@@ -11,6 +11,10 @@ npm run dev
 
 Create a production build with `npm run build`; preview it locally with `npm run preview`.
 
+## Deploy to Vercel
+
+Import this repository in Vercel or run `vercel --prod` from the project directory. Vercel builds the site into `dist` and serves client-side routes such as `/services` directly.
+
 ## Site content
 
 - Pages: Home, Services, Projects, About, and Contact.
