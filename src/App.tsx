@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
@@ -10,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { contact, homeFeatures, projects, services, type ProjectCategory, type ProjectImage } from "./data";
+import { contact, projects, services, type ProjectCategory, type ProjectImage } from "./data";
 
 const pageLinks = [
   { to: "/", label: "Home" },
@@ -23,7 +24,7 @@ const pageLinks = [
 const pageMetadata: Record<string, { title: string; description: string }> = {
   "/": {
     title: "JGPS Property Services | Renovation Specialists in Dublin",
-    description: "JGPS Property Services are renovation specialists in Dublin and Leinster, with a focus on kitchens, bathrooms and thoughtful home transformations.",
+    description: "Renovation specialists for kitchens, bathrooms and homes across Dublin and Leinster. Explore selected JGPS projects and the full photo archive.",
   },
   "/services": {
     title: "Renovations, Kitchens & Bathrooms | JGPS Property Services",
@@ -31,7 +32,7 @@ const pageMetadata: Record<string, { title: string; description: string }> = {
   },
   "/projects": {
     title: "Project Portfolio | JGPS Property Services",
-    description: "Explore selected kitchen, bathroom and home renovation photography from JGPS Property Services.",
+    description: "Explore selected kitchen, bathroom and home renovation projects, plus the full 116-photo archive from JGPS Property Services.",
   },
   "/about": {
     title: "About JGPS Property Services | Dublin Renovation Specialists",
@@ -47,14 +48,20 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    if (location.hash) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(location.hash.slice(1))?.scrollIntoView();
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
     const metadata = pageMetadata[location.pathname] ?? {
       title: "Page not found | JGPS Property Services",
       description: "The page you are looking for could not be found.",
     };
     document.title = metadata.title;
     document.querySelector('meta[name="description"]')?.setAttribute("content", metadata.description);
-  }, [location.pathname]);
+  }, [location.hash, location.pathname]);
 
   return (
     <>
@@ -121,7 +128,7 @@ function SiteHeader() {
           ))}
         </div>
         <Link className="nav-cta" to="/contact">
-          ENQUIRE <ArrowUpRight size={15} />
+          Start a project <ArrowUpRight size={15} />
         </Link>
       </nav>
     </header>
@@ -365,80 +372,386 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
   );
 }
 
+type ArchiveCategory = "Bathroom" | "Interior";
+type ArchiveFilter = "All" | ArchiveCategory;
+type PhotoCategory = ArchiveCategory | "Kitchen" | "Renovation";
+
+type ArchivePhoto = {
+  src: string;
+  category: PhotoCategory;
+  number: number;
+  alt: string;
+};
+
+const archivePhotosByCategory: Record<ArchiveCategory, ArchivePhoto[]> = {
+  Bathroom: Array.from({ length: 67 }, (_, index) => {
+    const number = index + 1;
+    return {
+      src: `/images/archive/bathroom-${String(number).padStart(3, "0")}.webp`,
+      category: "Bathroom",
+      number,
+      alt: `Bathroom photograph ${number} from the JGPS photo archive`,
+    };
+  }),
+  Interior: Array.from({ length: 49 }, (_, index) => {
+    const number = index + 1;
+    return {
+      src: `/images/archive/interior-${String(number).padStart(3, "0")}.webp`,
+      category: "Interior",
+      number,
+      alt: `Interior photograph ${number} from the JGPS photo archive`,
+    };
+  }),
+};
+
+const allArchivePhotos = [
+  ...archivePhotosByCategory.Bathroom,
+  ...archivePhotosByCategory.Interior,
+];
+
+const homeArchivePhotos = [
+  ...[1, 7, 25, 41, 52, 67].map((number) => archivePhotosByCategory.Bathroom[number - 1]),
+  ...[1, 9, 17, 25, 37, 49].map((number) => archivePhotosByCategory.Interior[number - 1]),
+];
+
+const featuredPhotos: ArchivePhoto[] = [
+  {
+    src: "/images/projects/kitchen-signature.webp",
+    category: "Kitchen",
+    number: 1,
+    alt: "Contemporary kitchen with a sculptural stone island and herringbone floor",
+  },
+  {
+    src: "/images/archive/bathroom-007.webp",
+    category: "Bathroom",
+    number: 7,
+    alt: "Bathroom with a lit round mirror, oak vanity and wall-mounted toilet",
+  },
+  {
+    src: "/images/archive/bathroom-025.webp",
+    category: "Bathroom",
+    number: 25,
+    alt: "Bathroom with dark herringbone tile, a clear-glass shower and wall-mounted toilet",
+  },
+  {
+    src: "/images/projects/renovation-living.webp",
+    category: "Renovation",
+    number: 1,
+    alt: "Bright renovated living space with wide windows and timber flooring",
+  },
+  {
+    src: "/images/archive/bathroom-041.webp",
+    category: "Bathroom",
+    number: 41,
+    alt: "Bathroom with an illuminated round mirror, walk-in shower and white tiled walls",
+  },
+];
+
+function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
+  const [filter, setFilter] = useState<ArchiveFilter>("All");
+  const [activeFeaturedIndex, setActiveFeaturedIndex] = useState(0);
+  const [activePhoto, setActivePhoto] = useState<ArchivePhoto | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
+
+  const activeFeaturedPhoto = featuredPhotos[activeFeaturedIndex] ?? featuredPhotos[0];
+  const filteredPhotos = useMemo(
+    () => filter === "All" ? allArchivePhotos : archivePhotosByCategory[filter],
+    [filter],
+  );
+  const displayedPhotos = mode === "archive"
+    ? filteredPhotos
+    : filter === "All"
+      ? homeArchivePhotos
+      : filteredPhotos.slice(0, 12);
+  const photoSequence = useMemo(() => Array.from(
+    new Map([...featuredPhotos, ...filteredPhotos].map((photo) => [photo.src, photo])).values(),
+  ), [filteredPhotos]);
+
+  useEffect(() => {
+    if (!activePhoto) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+
+    const closePhoto = () => {
+      setActivePhoto(null);
+      window.requestAnimationFrame(() => openerRef.current?.focus());
+    };
+    const stepPhoto = (step: number) => {
+      const currentIndex = photoSequence.findIndex((photo) => photo.src === activePhoto.src);
+      const nextPhoto = photoSequence[(currentIndex + step + photoSequence.length) % photoSequence.length];
+      setActivePhoto(nextPhoto);
+      const featuredIndex = featuredPhotos.findIndex((photo) => photo.src === nextPhoto.src);
+      if (featuredIndex !== -1) setActiveFeaturedIndex(featuredIndex);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closePhoto();
+      if (event.key === "ArrowRight") stepPhoto(1);
+      if (event.key === "ArrowLeft") stepPhoto(-1);
+      if (event.key === "Tab") {
+        const controls = dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled])");
+        const first = controls?.[0];
+        const last = controls?.[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [activePhoto, photoSequence]);
+
+  function closePhoto() {
+    setActivePhoto(null);
+    window.requestAnimationFrame(() => openerRef.current?.focus());
+  }
+
+  function stepPhoto(step: number) {
+    if (!activePhoto) return;
+    const currentIndex = photoSequence.findIndex((photo) => photo.src === activePhoto.src);
+    const nextPhoto = photoSequence[(currentIndex + step + photoSequence.length) % photoSequence.length];
+    setActivePhoto(nextPhoto);
+    const featuredIndex = featuredPhotos.findIndex((photo) => photo.src === nextPhoto.src);
+    if (featuredIndex !== -1) setActiveFeaturedIndex(featuredIndex);
+  }
+
+  function setArchiveFilter(nextFilter: ArchiveFilter) {
+    setFilter(nextFilter);
+  }
+
+  function openPhoto(photo: ArchivePhoto, opener: HTMLButtonElement) {
+    openerRef.current = opener;
+    setActivePhoto(photo);
+  }
+
+  return (
+    <>
+      {mode === "home" && (
+      <section className="home-mosaic" aria-label="Selected JGPS project photographs">
+        <div className="home-hero-stage">
+          <button
+            className="home-hero-image"
+            type="button"
+            aria-label={`Enlarge ${activeFeaturedPhoto.category.toLowerCase()} photograph ${String(activeFeaturedPhoto.number).padStart(2, "0")}`}
+            onClick={(event) => openPhoto(activeFeaturedPhoto, event.currentTarget)}
+          >
+            <img
+              key={activeFeaturedPhoto.src}
+              src={activeFeaturedPhoto.src}
+              alt={activeFeaturedPhoto.alt}
+              fetchPriority="high"
+              decoding="async"
+            />
+          </button>
+          <div className="home-hero-shade" aria-hidden="true" />
+          <div className="home-hero-location">
+            <span>JGPS PROPERTY SERVICES</span>
+            <span>DUBLIN&nbsp; / &nbsp;LEINSTER</span>
+          </div>
+          <div className="home-mosaic-copy">
+            <span>RENOVATIONS&nbsp; / &nbsp;KITCHENS&nbsp; / &nbsp;BATHROOMS</span>
+            <h1>Homes,<br /><em>reworked.</em></h1>
+            <p>Renovation specialists working across Dublin and Leinster.</p>
+            <div className="home-mosaic-actions">
+              <Link className="home-primary-cta" to="/contact">
+                Discuss a project <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
+              <a className="home-secondary-cta" href={contact.phoneHref}>
+                <Phone size={15} aria-hidden="true" /> {contact.phoneDisplay}
+              </a>
+            </div>
+          </div>
+          <div className="home-hero-explorer">
+            <div className="home-hero-thumbnails" role="group" aria-label="Choose a featured photograph">
+              {featuredPhotos.map((photo, index) => (
+                <button
+                  key={photo.src}
+                  className={`home-hero-thumbnail${activeFeaturedIndex === index ? " is-active" : ""}`}
+                  type="button"
+                  aria-label={`Show ${photo.category.toLowerCase()} photograph ${String(photo.number).padStart(2, "0")}`}
+                  aria-pressed={activeFeaturedIndex === index}
+                  onClick={() => setActiveFeaturedIndex(index)}
+                >
+                  <img src={photo.src} alt="" loading="lazy" decoding="async" />
+                </button>
+              ))}
+              <div className="home-hero-navigation">
+                <span aria-live="polite">
+                  <strong>{String(activeFeaturedIndex + 1).padStart(2, "0")}</strong>
+                  <i aria-hidden="true" />
+                  {String(featuredPhotos.length).padStart(2, "0")}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Previous featured photograph"
+                  onClick={() => setActiveFeaturedIndex((index) => (index - 1 + featuredPhotos.length) % featuredPhotos.length)}
+                >
+                  <ArrowLeft size={17} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next featured photograph"
+                  onClick={() => setActiveFeaturedIndex((index) => (index + 1) % featuredPhotos.length)}
+                >
+                  <ArrowRight size={17} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <a className="home-hero-archive-link" href="#photo-archive">
+              <Camera size={15} aria-hidden="true" />
+              <span>Explore selected photographs</span>
+              <ArrowDown size={15} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {mode === "home" && (
+        <>
+          <section className="home-index-intro" aria-label="About JGPS">
+            <span className="home-index-intro-label">BASED IN DUBLIN<br />WORKING ACROSS LEINSTER</span>
+            <p>Renovations, kitchens<br />&amp; bathrooms.</p>
+            <Link to="/services">What JGPS does <ArrowUpRight size={16} /></Link>
+          </section>
+
+          <section className="home-services" aria-labelledby="home-services-title">
+            <div className="home-services-heading">
+              <span className="home-index-eyebrow">WHAT JGPS DOES</span>
+              <h2 id="home-services-title">Thoughtful work for the spaces you live in.</h2>
+              <p>Renovations, kitchens and bathrooms across Dublin and Leinster.</p>
+            </div>
+            <div className="home-services-grid">
+              {services.map((service) => (
+                <Link className="home-service-card" key={service.number} to="/services">
+                  <div className="home-service-card-image">
+                    <img src={service.image} alt="" loading="lazy" />
+                    <span>{service.number} / 03</span>
+                  </div>
+                  <div className="home-service-card-copy">
+                    <h3>{service.title}</h3>
+                    <p>{service.text}</p>
+                    <span className="home-service-card-link">Explore service <ArrowUpRight size={16} /></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      <section
+        className={`home-archive${mode === "archive" ? " projects-photo-archive" : ""}`}
+        id={mode === "home" ? "photo-archive" : "projects-photo-archive"}
+        aria-labelledby="home-archive-title"
+      >
+      <div className="home-archive-heading">
+        <div>
+          <span className="home-index-eyebrow">
+            {mode === "archive" ? "THE FULL PHOTO ARCHIVE" : "SELECTED PHOTOGRAPHS / 12 OF 116"}
+          </span>
+          <h2 id="home-archive-title">No two rooms<br /><em>the same.</em></h2>
+        </div>
+        <p>{mode === "archive"
+          ? "Browse the full JGPS archive of bathrooms and interiors. Select any photograph to view it larger."
+          : "A selection of JGPS bathrooms and interiors. Explore the full photo archive on the projects page."}</p>
+      </div>
+
+      <div className="home-archive-toolbar">
+        <div className="home-archive-filters" role="group" aria-label="Filter photo archive">
+          {(["All", "Bathroom", "Interior"] as const).map((option) => (
+            <button
+              key={option}
+              className={`home-archive-filter${filter === option ? " is-active" : ""}`}
+              type="button"
+              aria-pressed={filter === option}
+              onClick={() => setArchiveFilter(option)}
+            >
+              {option === "All" ? "All photographs" : `${option}s`}
+              {option === "All" && <span>116</span>}
+              {option === "Bathroom" && <span>67</span>}
+              {option === "Interior" && <span>49</span>}
+            </button>
+          ))}
+        </div>
+        <span className="home-archive-count" aria-live="polite">
+          {mode === "archive"
+            ? `Showing ${filteredPhotos.length} of 116 photographs`
+            : `Showing ${displayedPhotos.length} selected of ${filteredPhotos.length} photographs`}
+        </span>
+      </div>
+
+      <div className="home-archive-grid">
+        {displayedPhotos.map((photo) => (
+          <button
+            className="home-archive-photo"
+            key={photo.src}
+            type="button"
+            aria-label={`Enlarge ${photo.category.toLowerCase()} archive photograph ${String(photo.number).padStart(2, "0")}`}
+            onClick={(event) => openPhoto(photo, event.currentTarget)}
+          >
+            <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" />
+            <span className="home-archive-photo-label">
+              <span>{photo.category} / {String(photo.number).padStart(2, "0")}</span>
+              <ArrowUpRight size={17} aria-hidden="true" />
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {mode === "home" && (
+        <Link className="home-archive-more" to="/projects#projects-photo-archive">
+          Browse all 116 photographs <ArrowUpRight size={17} aria-hidden="true" />
+        </Link>
+      )}
+
+      {activePhoto && (
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activePhoto.category} photograph ${activePhoto.number} from JGPS project photography`}
+          tabIndex={-1}
+          ref={dialogRef}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closePhoto();
+          }}
+        >
+          <button className="lightbox-close" type="button" onClick={closePhoto} aria-label="Close image">
+            <X size={22} />
+          </button>
+          <button className="lightbox-arrow lightbox-prev" type="button" onClick={() => stepPhoto(-1)} aria-label="Previous photograph">
+            <ArrowLeft size={21} />
+          </button>
+          <figure className="lightbox-figure">
+            <img src={activePhoto.src} alt={activePhoto.alt} />
+            <figcaption>
+              <span className="eyebrow eyebrow-orange">{activePhoto.category} / {String(activePhoto.number).padStart(2, "0")}</span>
+              <strong>JGPS project photography</strong>
+            </figcaption>
+          </figure>
+          <button className="lightbox-arrow lightbox-next" type="button" onClick={() => stepPhoto(1)} aria-label="Next photograph">
+            <ArrowRight size={21} />
+          </button>
+        </div>
+      )}
+      </section>
+    </>
+  );
+}
+
 function HomePage() {
   return (
-    <div className="journal-home">
-      <section className="journal-cover home-cover" aria-label="JGPS renovation work">
-        <img
-          className="journal-cover-image"
-          src="/images/projects/hero-kitchen.webp"
-          alt="Kitchen with a veined stone island, pale cabinets, black-framed glazing and herringbone floor"
-          fetchPriority="high"
-        />
-        <div className="journal-cover-shade" />
-        <div className="home-cover-copy">
-          <span className="journal-cover-kicker">JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
-          <span className="home-cover-index">KITCHEN / 01</span>
-          <h1>Stone across<br />the island.</h1>
-          <p>Veined stone on the island and splashback. Pale cabinetry. Herringbone underfoot.</p>
-          <a className="home-cover-link" href="#kitchen">
-            <span>SEE THE KITCHEN</span><ArrowRight size={15} />
-          </a>
-        </div>
-        <span className="home-cover-image-credit">JGPS PROJECT PHOTOGRAPH&nbsp; / &nbsp;01—03</span>
-        <a className="journal-cover-scroll" href="#journal">
-          <span>SCROLL TO EXPLORE THE WORK</span><span className="journal-scroll-line" />
-        </a>
-      </section>
-
-      <section className="journal-introduction" id="journal">
-        <div className="journal-intro-meta">
-          <span>JGPS / PROPERTY SERVICES</span>
-          <span>RENOVATIONS<br />KITCHENS / BATHROOMS</span>
-        </div>
-        <div className="journal-intro-content">
-          <p>Renovation specialists.<br />Based in Dublin.</p>
-          <span>Working across Leinster, with a focus on kitchens and bathrooms.</span>
-        </div>
-        <Link className="journal-intro-link" to="/services" aria-label="See JGPS services">
-          <ArrowUpRight size={19} />
-        </Link>
-      </section>
-
-      {homeFeatures.map((feature, index) => (
-        <section className={`home-work home-work-${feature.id}`} id={feature.id} key={feature.id}>
-          <div className="home-work-heading">
-            <span>{feature.section}</span>
-            <span>JGPS PROPERTY SERVICES</span>
-          </div>
-          <div className="home-work-main">
-            <div className="home-work-copy">
-              <h2>{feature.title}</h2>
-              <p>{feature.summary}</p>
-              <Link to="/contact">Enquire about a {feature.id === "renovation" ? "renovation" : feature.id} <ArrowUpRight size={15} /></Link>
-            </div>
-            <figure className="home-work-cover">
-              <img src={feature.cover.src} alt={feature.cover.alt} loading={index === 0 ? "eager" : "lazy"} />
-              <figcaption><span>0{index + 1}</span>{feature.cover.caption}</figcaption>
-            </figure>
-          </div>
-          <div className="home-work-details">
-            {feature.details.map((detail, detailIndex) => (
-              <figure key={detail.src}>
-                <img src={detail.src} alt={detail.alt} loading="lazy" />
-                <figcaption><span>0{index + detailIndex + 2}</span>{detail.caption}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      <section className="home-services-note">
-        <span>JGPS / SERVICES</span>
-        <p>Renovations&nbsp; · &nbsp;Kitchens&nbsp; · &nbsp;Bathrooms</p>
-        <Link to="/services">More about the work <ArrowUpRight size={15} /></Link>
-      </section>
-
+    <div className="home-index">
+      <HomeArchiveGallery mode="home" />
       <JournalContact />
     </div>
   );
@@ -520,6 +833,7 @@ function ProjectsPage() {
         <ProjectGrid items={filteredProjects} />
         <p className="portfolio-note">JGPS Property Services / Dublin + Leinster</p>
       </section>
+      <HomeArchiveGallery mode="archive" />
       <ContactBand />
     </>
   );
@@ -659,7 +973,7 @@ function JournalContact() {
     <section className="journal-contact">
       <span>JGPS PROPERTY SERVICES&nbsp; / &nbsp;DUBLIN + LEINSTER</span>
       <h2>Planning a renovation?</h2>
-      <Link to="/contact">Contact JGPS <ArrowUpRight size={17} /></Link>
+      <Link className="journal-contact-cta" to="/contact">Start a project <ArrowUpRight size={18} /></Link>
     </section>
   );
 }
