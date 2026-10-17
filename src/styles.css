@@ -1829,40 +1829,42 @@ h2 em {
 
 @media (max-width: 720px) {
   html {
-    scroll-padding-top: 72px;
+    scroll-padding-top: 64px;
   }
 
   .site-header {
-    height: 72px;
-    padding: 0 5vw;
-    background: rgba(18, 18, 17, 0.96);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+    height: 64px;
+    gap: 8px;
+    padding: 0 16px;
+    background: #111110;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
   }
 
   .brand {
-    width: clamp(118px, 37vw, 142px);
-    height: 56px;
+    width: clamp(112px, 35vw, 132px);
+    height: 50px;
   }
 
   .header-social-links {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     margin-left: auto;
-    margin-right: 8px;
+    margin-right: 0;
   }
 
   .header-social-link {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .menu-toggle {
     display: flex;
     position: relative;
     z-index: 102;
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     flex: 0 0 auto;
     border-radius: 50%;
   }
@@ -1870,9 +1872,9 @@ h2 em {
   .primary-navigation {
     position: fixed;
     z-index: 101;
-    inset: 72px 0 0;
-    height: calc(100vh - 72px);
-    height: calc(100dvh - 72px);
+    inset: 64px 0 0;
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -3990,8 +3992,9 @@ h2 em {
 
 @media (max-width: 720px) {
   .site-header-home {
-    height: 72px;
-    padding: 0 5vw;
+    height: 64px;
+    padding: 0 16px;
+    background: #111110;
     backdrop-filter: none;
   }
 
@@ -4001,7 +4004,7 @@ h2 em {
   }
 
   .site-header-home .primary-navigation {
-    top: 72px;
+    top: 64px;
     background: var(--black);
   }
 
@@ -5280,8 +5283,8 @@ h2 em {
 
 @media (max-width: 720px) {
   .home-hero-stage {
-    height: min(820px, calc(100svh - 72px));
-    min-height: min(610px, calc(100svh - 72px));
+    height: min(820px, calc(100svh - 64px));
+    min-height: min(610px, calc(100svh - 64px));
   }
 
   .home-hero-shade {
