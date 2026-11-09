@@ -21,6 +21,7 @@ Import this repository in Vercel or run `vercel --prod` from the project directo
 - Portfolio photography is stored as optimized WebP files in `public/images/projects/`.
 - Brand artwork is in `public/logo.png`.
 - Contact details and project imagery labels are maintained in `src/data.ts`.
+- The home page presents automatically advancing kitchen, bathroom, and renovation photo rails; the projects page groups selected photos by category and includes the full photo archive.
 - The enquiry form opens a pre-filled email in the visitor’s default email app. It does not submit to or store information on a server.
 
 The phone, WhatsApp number, and email currently use details found in public business listings and should be confirmed by JGPS before launch.

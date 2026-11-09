@@ -25,10 +25,10 @@ export const projects: ProjectImage[] = [
     shape: "landscape",
   },
   {
-    src: "/images/projects/bathroom-double-vanity.webp",
-    alt: "Warm stone bathroom with a double vanity and walk-in shower",
+    src: "/images/archive/bathroom-001.webp",
+    alt: "Bathroom with a floating wood vanity, illuminated mirror and stone-look tiles",
     category: "Bathroom",
-    title: "Warm stone double vanity",
+    title: "Stone-tiled bathroom vanity",
     shape: "portrait",
   },
   {
@@ -106,6 +106,6 @@ export const services = [
     number: "03",
     title: "Bathrooms",
     text: "Bathroom renovations planned around your space, needs and choice of finishes.",
-    image: "/images/projects/bathroom-double-vanity.webp",
+    image: "/images/archive/bathroom-001.webp",
   },
 ];

@@ -26,7 +26,7 @@ const pageLinks = [
 const pageMetadata: Record<string, { title: string; description: string }> = {
   "/": {
     title: "JGPS Property Services | Renovation Specialists in Dublin",
-    description: "Renovation specialists for kitchens, bathrooms and homes across Dublin and Leinster. Explore selected JGPS projects and the full photo archive.",
+    description: "Renovation specialists for kitchens, bathrooms and homes across Dublin and Leinster. Browse selected JGPS projects and the full photo archive.",
   },
   "/services": {
     title: "Renovations, Kitchens & Bathrooms | JGPS Property Services",
@@ -100,7 +100,7 @@ function SiteHeader() {
   return (
     <header className={`site-header${location.pathname === "/" ? " site-header-home" : ""}`}>
       <Link className="brand" to="/" aria-label="JGPS Property Services home">
-        <img src="/logo.png" alt="JGPS Property Services" />
+        <img src="/images/jgps-logo.png" alt="JGPS Property Services" />
       </Link>
       <div className="header-social-links">
         <a
@@ -181,7 +181,7 @@ function SiteFooter() {
       <div className="footer-top">
         <div className="footer-brand-block">
           <Link className="brand footer-brand" to="/" aria-label="JGPS Property Services home">
-            <img src="/logo.png" alt="JGPS Property Services" />
+            <img src="/images/jgps-logo.png" alt="JGPS Property Services" />
           </Link>
           <p>Considered renovations for the way you live.</p>
           <span className="footer-location">Dublin &amp; Leinster</span>
@@ -348,10 +348,98 @@ function ProjectCard({
   );
 }
 
-function ProjectGrid({ items }: { items: ProjectImage[] }) {
+function ProjectCategoryRail({
+  category,
+  items,
+  onOpen,
+}: {
+  category: ProjectCategory;
+  items: ProjectImage[];
+  onOpen: (project: ProjectImage, opener: HTMLButtonElement) => void;
+}) {
+  const railRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const firstCard = rail.querySelector<HTMLElement>(".project-card");
+      if (!firstCard) return;
+
+      const gap = Number.parseFloat(window.getComputedStyle(rail).columnGap) || 0;
+      const step = firstCard.offsetWidth + gap;
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      const left = rail.scrollLeft + step >= maxScroll - 2 ? 0 : rail.scrollLeft + step;
+      rail.scrollTo({
+        left,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  function scrollRail(direction: -1 | 1) {
+    const rail = railRef.current;
+    if (!rail) return;
+    rail.scrollBy({
+      left: direction * rail.clientWidth * 0.8,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }
+
+  return (
+    <div className="project-category-rail">
+      <div className="project-category-heading">
+        <h3>{category === "Bathroom" ? "Bathrooms" : `${category}s`}</h3>
+        <div className="project-slider-controls">
+          <button
+            type="button"
+            aria-label={`Scroll ${category.toLowerCase()} projects left`}
+            aria-controls={`project-rail-${category.toLowerCase()}`}
+            onClick={() => scrollRail(-1)}
+          >
+            <ArrowLeft size={17} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label={`Scroll ${category.toLowerCase()} projects right`}
+            aria-controls={`project-rail-${category.toLowerCase()}`}
+            onClick={() => scrollRail(1)}
+          >
+            <ArrowRight size={17} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div
+        className="project-slider-track"
+        id={`project-rail-${category.toLowerCase()}`}
+        ref={railRef}
+        tabIndex={0}
+        role="region"
+        aria-label={`${category} project photographs`}
+      >
+        {items.map((project, index) => (
+          <ProjectCard key={project.src} project={project} index={index} onOpen={onOpen} />
+        ))}
+        <Link className="project-more-card" to={`/projects#projects-${category.toLowerCase()}`}>
+          <span className="eyebrow eyebrow-orange">JGPS / {category}</span>
+          <strong>See more<br />{category.toLowerCase()}s</strong>
+          <span className="project-more-link">Explore all projects <ArrowUpRight size={17} aria-hidden="true" /></span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ProjectShowcase({ compact = false }: { compact?: boolean }) {
   const [activeProject, setActiveProject] = useState<ProjectImage | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
+  const categories: ProjectCategory[] = ["Kitchen", "Bathroom", "Renovation"];
+  const lightboxItems = compact ? categories.flatMap((category) => homeSlideProjects[category]) : projects;
 
   useEffect(() => {
     if (!activeProject) return;
@@ -381,7 +469,7 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [activeProject, items]);
+  }, [activeProject]);
 
   function closeProject() {
     setActiveProject(null);
@@ -390,25 +478,69 @@ function ProjectGrid({ items }: { items: ProjectImage[] }) {
 
   function stepProject(step: number) {
     if (!activeProject) return;
-    const currentIndex = items.findIndex((item) => item.src === activeProject.src);
-    setActiveProject(items[(currentIndex + step + items.length) % items.length]);
+    const currentIndex = lightboxItems.findIndex((item) => item.src === activeProject.src);
+    setActiveProject(lightboxItems[(currentIndex + step + lightboxItems.length) % lightboxItems.length]);
   }
 
   return (
     <>
-      <div className="project-grid">
-        {items.map((project, index) => (
-          <ProjectCard
-            key={project.src}
-            project={project}
-            index={index}
-            onOpen={(selected, opener) => {
-              openerRef.current = opener;
-              setActiveProject(selected);
-            }}
-          />
-        ))}
-      </div>
+      <section
+        className={`project-showcase${compact ? " project-showcase-compact" : ""}`}
+        id={compact ? "home-projects" : "projects"}
+        aria-labelledby={compact ? "home-projects-title" : "projects-title"}
+      >
+        <div className="project-showcase-heading">
+          <div>
+            <span className="eyebrow eyebrow-orange">{compact ? "JGPS / Selected work" : "JGPS / Portfolio"}</span>
+            <h2 id={compact ? "home-projects-title" : "projects-title"}>
+              {compact ? <>Made for<br /><em>living.</em></> : <>The work,<br /><em>by room.</em></>}
+            </h2>
+          </div>
+          <div className="project-showcase-intro">
+            <p>Photographs of JGPS kitchens, bathrooms and renovation work.</p>
+            {compact && <Link className="project-showcase-link" to="/projects">All project photographs <ArrowUpRight size={16} /></Link>}
+          </div>
+        </div>
+        {compact ? (
+          <div className="project-category-list">
+            {categories.map((category) => (
+              <ProjectCategoryRail
+                key={category}
+                category={category}
+                items={homeSlideProjects[category]}
+                onOpen={(selected, opener) => {
+                  openerRef.current = opener;
+                  setActiveProject(selected);
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="project-category-list">
+            {categories.map((category) => {
+              const items = projects.filter((project) => project.category === category);
+              return (
+                <section className="project-category-static" key={category} id={`projects-${category.toLowerCase()}`}>
+                  <h3>{category === "Bathroom" ? "Bathrooms" : `${category}s`}</h3>
+                  <div className="project-grid">
+                    {items.map((project, index) => (
+                      <ProjectCard
+                        key={project.src}
+                        project={project}
+                        index={index}
+                        onOpen={(selected, opener) => {
+                          openerRef.current = opener;
+                          setActiveProject(selected);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </section>
       {activeProject && (
         <div
           className="lightbox"
@@ -523,6 +655,34 @@ const archivePhotosByCategory: Record<ArchiveCategory, ArchivePhoto[]> = {
   Interior: prioritizePhotos(interiorArchivePhotos.filter(
     (photo) => !kitchenInteriorNumbers.has(photo.number) && !bathroomInteriorNumbers.has(photo.number),
   )),
+};
+
+function archiveProjects(category: ProjectCategory, photos: ArchivePhoto[]): ProjectImage[] {
+  return photos.map((photo) => ({
+    src: photo.src,
+    alt: photo.alt,
+    category,
+    title: `${photo.category} photograph ${photo.number}`,
+    shape: "portrait",
+  }));
+}
+
+const homeSlideProjects: Record<ProjectCategory, ProjectImage[]> = {
+  Kitchen: [
+    ...projects.filter((project) => project.category === "Kitchen"),
+    ...archiveProjects("Kitchen", archivePhotosByCategory.Kitchen),
+  ],
+  Bathroom: [
+    ...projects.filter((project) => project.category === "Bathroom"),
+    ...archiveProjects(
+      "Bathroom",
+      archivePhotosByCategory.Bathroom.filter((photo) => photo.src !== projects[1].src).slice(0, 12),
+    ),
+  ],
+  Renovation: [
+    ...projects.filter((project) => project.category === "Renovation"),
+    ...archiveProjects("Renovation", archivePhotosByCategory.Interior.slice(0, 8)),
+  ],
 };
 
 const allArchivePhotos = prioritizePhotos([
@@ -847,10 +1007,92 @@ function HomeArchiveGallery({ mode }: { mode: "home" | "archive" }) {
 }
 
 function HomePage() {
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setActiveHeroIndex((index) => (index + 1) % (featuredPhotos.length + 1));
+      }
+    }, 7000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
     <div className="home-index">
-      <HomeArchiveGallery mode="home" />
-      <JournalContact />
+      <section className="home-mosaic" aria-label="JGPS Property Services">
+        <div className="home-hero-stage">
+          <div className="home-hero-image">
+            {featuredPhotos.map((photo, index) => (
+              <img
+                className={activeHeroIndex === index ? "is-active" : ""}
+                key={photo.src}
+                src={photo.src}
+                alt={activeHeroIndex === index ? photo.alt : ""}
+                aria-hidden={activeHeroIndex !== index}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            ))}
+          </div>
+          {activeHeroIndex === featuredPhotos.length && (
+            <Link className="home-hero-see-more" to="/projects">
+              <img src={featuredPhotos[3].src} alt="" aria-hidden="true" />
+              <span className="eyebrow eyebrow-orange">JGPS / Project photographs</span>
+              <strong>See more<br />of the work.</strong>
+              <span className="home-hero-see-more-link">Explore all projects <ArrowUpRight size={18} aria-hidden="true" /></span>
+            </Link>
+          )}
+          <div className="home-hero-shade" aria-hidden="true" />
+          <div className="home-hero-location">
+            <span>JGPS PROPERTY SERVICES</span>
+            <span>DUBLIN&nbsp; / &nbsp;LEINSTER</span>
+          </div>
+          <div className={`home-mosaic-copy${activeHeroIndex === featuredPhotos.length ? " is-hidden" : ""}`}>
+            <span>RENOVATIONS&nbsp; / &nbsp;KITCHENS&nbsp; / &nbsp;BATHROOMS</span>
+            <h1>Rooms,<br /><em>reworked.</em></h1>
+            <p>Renovation specialists based in Dublin and working across Leinster.</p>
+            <div className="home-mosaic-actions">
+              <Link className="home-primary-cta" to="/contact">
+                Discuss a project <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+          <div className="home-hero-explorer">
+            <a className="home-hero-archive-link" href="#home-projects">
+              <Camera size={15} aria-hidden="true" />
+              <span>Explore project photographs</span>
+              <ArrowDown size={15} aria-hidden="true" />
+            </a>
+            <div className="home-hero-slideshow" aria-label={`Hero slideshow, slide ${activeHeroIndex + 1} of ${featuredPhotos.length + 1}`}>
+              <span className="home-hero-slideshow-count">
+                {String(activeHeroIndex + 1).padStart(2, "0")}
+                <i />
+                {String(featuredPhotos.length + 1).padStart(2, "0")}
+              </span>
+              <div className="home-hero-slideshow-progress" role="group" aria-label="Choose a hero slide">
+                {Array.from({ length: featuredPhotos.length + 1 }, (_, index) => (
+                  <button
+                    type="button"
+                    className={`home-hero-progress-item${activeHeroIndex === index ? " is-active" : ""}`}
+                    key={index}
+                    aria-label={index === featuredPhotos.length ? "See more project photographs" : `Show hero photograph ${index + 1}`}
+                    aria-pressed={activeHeroIndex === index}
+                    onClick={() => setActiveHeroIndex(index)}
+                  >
+                    <i />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <ProjectShowcase compact />
     </div>
   );
 }
@@ -894,10 +1136,6 @@ function ServicesPage() {
 }
 
 function ProjectsPage() {
-  const [filter, setFilter] = useState<"All" | ProjectCategory>("All");
-  const filters: Array<"All" | ProjectCategory> = ["All", "Kitchen", "Bathroom", "Renovation"];
-  const filteredProjects = filter === "All" ? projects : projects.filter((project) => project.category === filter);
-
   return (
     <>
       <PageIntro
@@ -906,31 +1144,7 @@ function ProjectsPage() {
         text="A selection of photographs from JGPS Property Services projects."
         image="/images/projects/kitchen-signature.webp"
       />
-      <section className="portfolio-section section-pad">
-        <div className="portfolio-heading">
-          <div>
-            <span className="eyebrow">JGPS / Portfolio</span>
-            <h2>The work.</h2>
-          </div>
-          <p>Filter by project type. Select a photograph to view it larger.</p>
-        </div>
-        <div className="portfolio-filters" role="group" aria-label="Filter projects">
-          {filters.map((category) => (
-            <button
-              className={`filter-button${filter === category ? " is-active" : ""}`}
-              type="button"
-              key={category}
-              aria-pressed={filter === category}
-              onClick={() => setFilter(category)}
-            >
-              {category === "All" ? "All work" : `${category}s`}
-              <span>{category === "All" ? projects.length : projects.filter((project) => project.category === category).length}</span>
-            </button>
-          ))}
-        </div>
-        <ProjectGrid items={filteredProjects} />
-        <p className="portfolio-note">JGPS Property Services / Dublin + Leinster</p>
-      </section>
+      <ProjectShowcase />
       <HomeArchiveGallery mode="archive" />
       <ContactBand />
     </>
